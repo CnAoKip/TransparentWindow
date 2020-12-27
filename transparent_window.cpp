@@ -25,6 +25,7 @@ HWND hTarget;
 
 HRESULT EnableBlurBehind(HWND hwnd, BOOL Enable)
 {
+
    HRESULT hr = S_OK;
 
    // Create and populate the Blur Behind structure
@@ -39,7 +40,18 @@ HRESULT EnableBlurBehind(HWND hwnd, BOOL Enable)
    hr = DwmEnableBlurBehindWindow(hwnd, &bb);
    
    return hr;
+	
 }
+
+HRESULT ExtendFrame(HWND hwnd, BOOL Enable){
+	HRESULT hr = S_OK;
+	SetLayeredWindowAttributes(hwnd, 0, 255, LWA_ALPHA);
+	MARGINS margins = {-1, -1, -1, -1};
+	MARGINS margins0 = {0, 0, 0, 0};
+	DwmExtendFrameIntoClientArea(hwnd, Enable?&margins:&margins0);
+	return hr;
+}
+
 
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow) {
 	setlocale(LC_ALL, "chs");
@@ -57,6 +69,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 			continue;
 		}
 		
+		
 		HDC hdc = GetDC(HWND_DESKTOP);
 		RECT rc;
 		GetWindowRect(hTarget, &rc);
@@ -64,9 +77,10 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 		GetWindowTextW(hTarget, lpWindowName, 512);
 		if(hPrev != hTarget) {
 			cls(hStdOutput);
-			wprintf(L"µ±Ç°Ñ¡¶¨´°¿ÚÃû:%s\n", lpWindowName);
-			wprintf(L"°´[Enter]È·¶¨´°¿Ú¡£\n");
+			wprintf(L"å½“å‰é€‰å®šçª—å£å:%s\n", lpWindowName);
+			wprintf(L"æŒ‰[Enter]ç¡®å®šçª—å£ã€‚\n");
 		}
+		DeleteDC(hdc); 
 		if(KEY_DOWN(VK_RETURN)) break;
 		Sleep(20);
 		hPrev = hTarget;
@@ -79,19 +93,27 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	
 	SetLayeredWindowAttributes(hTarget, 0, 255, LWA_ALPHA);
 	bool changed = true;
-	bool AeroEnabled = false;
+	bool AeroEnabled = false,Extended = false;
 	while(1){
 		if(changed){
 			cls(hStdOutput);
-			wprintf(L"µ±Ç°ÒÑÑ¡¶¨´°¿Ú:%s\n", lpWindowName);
-			wprintf(L"Çë°´\'a\'%sÓÃÃ«²£Á§Ğ§¹û£¬°´¡ü¡ı¼üµ÷½ÚÍ¸Ã÷¶È:%d%%\n", AeroEnabled?L"½û":L"Æô", per);
-			wprintf(L"°´[Enter]È·¶¨Éè¶¨¡£\n");
+			wprintf(L"å½“å‰å·²é€‰å®šçª—å£:%s\n", lpWindowName);
+			wprintf(L"è¯·æŒ‰\'a\'%sç”¨æ¯›ç»ç’ƒæ•ˆæœï¼Œè¯·æŒ‰\'e\'%sç”¨æ•´ä¸ªçª—å£çš„æ ‡é¢˜æ æ ·å¼ï¼ŒæŒ‰â†‘â†“é”®è°ƒèŠ‚é€æ˜åº¦:%d%%\n", AeroEnabled?L"ç¦":L"å¯", Extended?L"ç¦":L"å¯", per);
+			wprintf(L"æŒ‰[Enter]ç¡®å®šè®¾å®šã€‚\n");
 			changed = false;
 		}
 		
 		if(KEY_DOWN('A')){
 			AeroEnabled = !AeroEnabled;
 			EnableBlurBehind(hTarget, AeroEnabled);
+			Sleep(150);changed = true;
+			continue;
+		
+		}
+		
+		if(KEY_DOWN('E')){
+			Extended = !Extended;
+			ExtendFrame(hTarget, Extended);
 			Sleep(150);changed = true;
 			continue;
 		}
